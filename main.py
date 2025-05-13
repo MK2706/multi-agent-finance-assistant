@@ -1,9 +1,5 @@
 import streamlit as st
-from financial_assistant import *
-import google.generativeai as genai
-
-GENAI_API_KEY = "AIzaSyAthCtTVRbEHD6qT-hyj5wY5nHH_bqXeFA"
-genai.configure(api_key=GENAI_API_KEY)
+from financial_assistant import initialize_session_state, get_stock_data, scrape_filings, get_yahoo_news, extract_symbol, add_to_index, search_index, generate_answer_gemini
 
 def main():
     st.set_page_config(page_title="Financial Assistant", layout="wide")
@@ -47,9 +43,9 @@ def main():
                         st.markdown(f"**{answer}**")
 
                     else:
-                        st.warning("Please mention a supported company like Tesla, Samsung, or Meta.")
+                        st.warning("⚠️ Please mention a supported company like Tesla, Samsung, or Meta.")
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"❌ Error: {str(e)}")
 
     with col2:
         st.subheader("Example Prompts")
