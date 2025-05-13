@@ -3,9 +3,12 @@ from sentence_transformers import SentenceTransformer
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
+import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
-import google.generativeai as genai
+
+GENAI_API_KEY = "AIzaSyAthCtTVRbEHD6qT-hyj5wY5nHH_bqXeFA"
+genai.configure(api_key=GENAI_API_KEY)
 
 def initialize_session_state():
     if 'initialized' not in st.session_state:
@@ -22,13 +25,13 @@ def initialize_session_state():
                 input_variables=["context", "question"]
             )
             st.session_state.embeddings = embeddings
-
+            
             try:
                 gemini_model = genai.GenerativeModel("models/gemini-1.5-flash")
                 st.session_state.gemini_model = gemini_model
                 st.session_state.model_loaded = True
             except Exception as e:
-                st.error(f"Failed to initialize Gemini model. Error: {str(e)}")
+                st.error(f"⚠️ Failed to initialize Gemini model. Error: {str(e)}")
                 st.session_state.gemini_model = None
                 st.session_state.model_loaded = False
             
@@ -42,12 +45,11 @@ def search_index(query, k=3):
 
 def generate_answer_gemini(question, context_docs):
     if 'gemini_model' not in st.session_state or st.session_state.gemini_model is None:
-        return "Gemini model is not available. Please check your API key."
-
+        return "⚠️ Gemini model is not available. Please check your API key."
+    
     try:
         context_text = "\n".join([doc[0].page_content for doc in context_docs])
         prompt = f"""You are a financial assistant. Use the following data to generate a market-style report like a Bloomberg analyst.
-
 Context:
 {context_text}
 
@@ -58,7 +60,7 @@ Give a professional, crisp answer with key figures and sentiment."""
         response = st.session_state.gemini_model.generate_content(prompt)
         return response.text if hasattr(response, 'text') else "Received unexpected response format from Gemini."
     except Exception as e:
-        return f"Error generating response: {str(e)}"
+        return f"⚠️ Error generating response: {str(e)}"
 
 def get_stock_data(symbol):
     try:
