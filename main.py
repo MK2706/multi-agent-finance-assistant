@@ -1,6 +1,15 @@
-import streamlit as st
-from financial_assistant import initialize_session_state, get_stock_data, scrape_filings, get_yahoo_news, extract_symbol, add_to_index, search_index, generate_answer_gemini
+# main.py
 
+import streamlit as st
+from financial_assistant import (
+    initialize_session_state, add_to_index, search_index, 
+    generate_answer_gemini, get_stock_data, scrape_filings, 
+    get_yahoo_news, extract_symbol
+)
+
+# ==============================
+# Main App
+# ==============================
 def main():
     st.set_page_config(page_title="Financial Assistant", layout="wide")
     st.title("💹  Financial Assistant")
@@ -50,7 +59,7 @@ def main():
     with col2:
         st.subheader("Example Prompts")
         st.subheader("How It Works")
-        st.markdown("""
+        st.markdown(""" 
         1. Identifies mentioned company.  
         2. Fetches live Yahoo Finance data + headlines.  
         3. Embeds + indexes data using FAISS.  
