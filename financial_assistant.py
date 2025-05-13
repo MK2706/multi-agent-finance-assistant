@@ -1,13 +1,13 @@
-# financial_assistant.py
-
+import streamlit as st
 import yfinance as yf
 from sentence_transformers import SentenceTransformer
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
-import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
+import google.generativeai as genai
+from langchain.chains import RetrievalQA
 
 # ==============================
 # CONFIGURATION - Gemini API Key
@@ -43,6 +43,12 @@ def initialize_session_state():
                 st.session_state.gemini_model = None
                 st.session_state.model_loaded = False
             
+            # Initialize retriever and QA chain
+            st.session_state.retriever = st.session_state.vectorstore.as_retriever()
+            st.session_state.qa_chain = RetrievalQA.from_chain_type(
+                llm=st.session_state.gemini_model, retriever=st.session_state.retriever
+            )
+
             st.session_state.initialized = True
 
 # ==============================
@@ -59,17 +65,9 @@ def generate_answer_gemini(question, context_docs):
         return "⚠️ Gemini model is not available. Please check your API key."
     
     try:
-        context_text = "\n".join([doc[0].page_content for doc in context_docs])
-        prompt = f"""You are a financial assistant. Use the following data to generate a market-style report like a Bloomberg analyst.
-Context:
-{context_text}
-
-Question:
-{question}
-
-Give a professional, crisp answer with key figures and sentiment."""
-        response = st.session_state.gemini_model.generate_content(prompt)
-        return response.text if hasattr(response, 'text') else "Received unexpected response format from Gemini."
+        # Use the QA chain to generate an answer
+        response = st.session_state.qa_chain.run(question)
+        return response if hasattr(response, 'text') else "Received unexpected response format from Gemini."
     except Exception as e:
         return f"⚠️ Error generating response: {str(e)}"
 
@@ -83,6 +81,7 @@ def get_stock_data(symbol):
             "actions": stock.actions
         }
     except Exception as e:
+        st.error(f"Failed to fetch stock data: {str(e)}")
         return None
 
 def scrape_filings(symbol):
@@ -94,6 +93,7 @@ def scrape_filings(symbol):
             "cashflow": stock.cashflow.to_string()
         }
     except Exception as e:
+        st.error(f"Failed to fetch filings: {str(e)}")
         return None
 
 def get_yahoo_news(symbol):
@@ -109,6 +109,7 @@ def get_yahoo_news(symbol):
                 headlines.append(text.strip())
         return headlines[:5]
     except Exception as e:
+        st.error(f"Failed to fetch news: {str(e)}")
         return []
 
 def extract_symbol(text):
