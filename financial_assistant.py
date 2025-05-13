@@ -1,3 +1,5 @@
+# financial_assistant.py
+
 import yfinance as yf
 from sentence_transformers import SentenceTransformer
 from langchain.vectorstores import FAISS
@@ -7,9 +9,15 @@ import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
 
-GENAI_API_KEY = "AIzaSyAthCtTVRbEHD6qT-hyj5wY5nHH_bqXeFA"
+# ==============================
+# CONFIGURATION - Gemini API Key
+# ==============================
+GENAI_API_KEY = "AIzaSyAthCtTVRbEHD6qT-hyj5wY5nHH_bqXeFA"  # 🔐 Replace this with your actual Gemini API key
 genai.configure(api_key=GENAI_API_KEY)
 
+# ==============================
+# Initialize session state
+# ==============================
 def initialize_session_state():
     if 'initialized' not in st.session_state:
         with st.spinner("Loading models..."):
@@ -37,6 +45,9 @@ def initialize_session_state():
             
             st.session_state.initialized = True
 
+# ==============================
+# Helper Functions
+# ==============================
 def add_to_index(text, metadata):
     st.session_state.vectorstore.add_texts([text], metadatas=[metadata])
 
@@ -72,7 +83,6 @@ def get_stock_data(symbol):
             "actions": stock.actions
         }
     except Exception as e:
-        st.error(f"Failed to fetch stock data: {str(e)}")
         return None
 
 def scrape_filings(symbol):
@@ -84,7 +94,6 @@ def scrape_filings(symbol):
             "cashflow": stock.cashflow.to_string()
         }
     except Exception as e:
-        st.error(f"Failed to fetch filings: {str(e)}")
         return None
 
 def get_yahoo_news(symbol):
@@ -100,7 +109,6 @@ def get_yahoo_news(symbol):
                 headlines.append(text.strip())
         return headlines[:5]
     except Exception as e:
-        st.error(f"Failed to fetch news: {str(e)}")
         return []
 
 def extract_symbol(text):
